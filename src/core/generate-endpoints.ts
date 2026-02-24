@@ -46,7 +46,7 @@ export function generateEndpoints(
 
   return endpoints
     .map(endpoint => {
-      const params: string[] = ['http: HttpAdapter'];
+      const params: string[] = [];
 
       endpoint.pathParams.forEach(p =>
         params.push(
@@ -104,7 +104,7 @@ export const ${endpoint.name} = (${params.join(
         endpoint.responseType,
         schemaSet,
       )}>> =>
-  http.request({
+  request({
     method: "${endpoint.method}",
     url: \`${interpolated}\`${bodyArg}${queryArg}
   });
