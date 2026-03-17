@@ -1,117 +1,68 @@
 import { Command } from 'commander';
-import { loadOpenAPI } from './core/load-openapi.ts';
-import { parseSchemas } from './core/parse-schemas.ts';
-import { parsePaths } from './core/parse-paths.ts';
-import { generateTypes } from './core/generate-types.ts';
-import { generateEndpoints } from './core/generate-endpoints.ts';
-import { writeFiles } from './core/write-files.ts';
-import { fetchTemplate } from './http/fetch-template.ts';
-import { axiosTemplate } from './http/axios-template.ts';
+import { run } from './codegen/pipeline.ts';
 
-const program = new Command();
+function main(): void {
+  const program = new Command();
 
-program
-  .name('apifoundry')
-  .description('Generate a fully typed TypeScript SDK from OpenAPI 3.x')
-  .version('1.0.0');
+  program
+    .name('apifoundry')
+    .description('Generate a typed TypeScript SDK from an OpenAPI 3.x spec')
+    .version('1.0.0');
 
-program
-  .command('generate')
-  .requiredOption('--input <path>', 'URL or local OpenAPI spec')
-  .requiredOption('--output <directory>', 'Output directory')
-  .option('--http <type>', 'fetch or axios', 'fetch')
-  .option('--split-by-tag <boolean>', 'Split files by tag', 'true')
-  .option('--base-url <url>', 'Default base URL', '')
-  .option('--timeout <ms>', 'Default timeout (ms)', '30000')
-  .action(async (options) => {
-    try {
-      console.log('🚀 Loading OpenAPI spec...');
-      const spec = await loadOpenAPI(options.input);
+  program
+    .command('generate')
+    .description('Generate TypeScript types and endpoint builders from an OpenAPI spec')
+    .requiredOption('--input <path>',  'Path or URL to OpenAPI 3.x JSON spec')
+    .requiredOption('--output <dir>',  'Root output directory (e.g. src/)')
+    .option('--sdk-dir <name>',        'Subdirectory for generated SDK files', 'api')
+    .option('--split-by-tag',          'One endpoint file per OpenAPI tag',    false)
+    .action(async (opts) => {
+      console.log('\n🔨 ApiFoundry\n');
 
-      console.log('📦 Parsing schemas...');
-      const schemas = parseSchemas(spec);
-      const typesContent = generateTypes(schemas);
-      const schemaNames = schemas.map(s => s.name);
+      try {
+        const result = await run(
+          {
+            input:  opts.input,
+            output: opts.output,
+            options: {
+              splitByTag: opts.splitByTag,
+              sdkDir:     opts.sdkDir,
+            },
+          },
+          (msg) => console.log(`   ⏳ ${msg}`),
+        );
+        console.log("result", result)
 
-      console.log('🛣️ Parsing paths...');
-      const endpoints = parsePaths(spec);
+        console.log(`\n✅ Done\n`);
 
-      const files: Record<string, string> = {};
-      const splitByTag = options.splitByTag === 'true';
-
-      // -------------------------
-      // Generate request client
-      // -------------------------
-      let requestTemplate =
-        options.http === 'axios' ? axiosTemplate : fetchTemplate;
-
-      if (options.baseUrl || options.timeout !== '30000') {
-        const updates: string[] = [];
-
-        if (options.baseUrl) {
-          updates.push(`baseUrl: '${options.baseUrl}'`);
+        if (result.written.length) {
+          console.log('   Written:');
+          result.written.forEach((f) => console.log(`     + ${f}`));
         }
 
-        if (options.timeout !== '30000') {
-          updates.push(`timeout: ${options.timeout}`);
+        if (result.skipped.length) {
+          console.log('\n   Skipped (already exists — yours to keep):');
+          result.skipped.forEach((f) => console.log(`     ~ ${f}`));
         }
 
-        requestTemplate += `\nsetConfig({ ${updates.join(', ')} });\n`;
+        if (result.warnings.length) {
+          console.log('\n   ⚠️  Warnings:');
+          result.warnings.forEach((w) => console.log(`     ! ${w}`));
+        }
+
+        console.log(`
+📋 Next steps:
+   1. cp ${opts.output}/api.ts.template ${opts.output}/api.ts
+   2. Set your baseUrl (or axiosInstance) in api.ts
+   3. import { api } from './api'  — done.
+`);
+      } catch (err) {
+        console.error('\n❌', err instanceof Error ? err.message : String(err));
+        process.exit(1);
       }
+    });
 
-      files['core/request.ts'] = requestTemplate;
+  program.parse(process.argv);
+}
 
-      // -------------------------
-      // Types
-      // -------------------------
-      files['types.ts'] = typesContent;
-
-      // -------------------------
-      // Endpoints
-      // -------------------------
-
-      if (splitByTag) {
-        const tags = Array.from(new Set(endpoints.map(e => e.tag)));
-
-        for (const tag of tags) {
-          const tagEndpoints = endpoints.filter(e => e.tag === tag);
-          const endpointContent = generateEndpoints(tagEndpoints, schemaNames);
-
-          files[`${tag}.ts`] = `
-import { request } from './core/request';
-import type { ApiResponse } from './core/request';
-import * as Types from './types';
-
-${endpointContent}
-`;
-        }
-
-        files['index.ts'] = `
-${tags.map(tag => `export * from './${tag}';`).join('\n')}
-export * from './types';
-export { setConfig } from './core/request';
-`;
-      } else {
-        const endpointContent = generateEndpoints(endpoints, schemaNames);
-
-        files['index.ts'] = `
-import { request, setConfig } from './core/request';
-import type { ApiResponse } from './core/request';
-export * from './types';
-export { setConfig };
-
-${endpointContent}
-`;
-      }
-
-      console.log('💾 Writing files...');
-      await writeFiles(options.output, files);
-
-      console.log('✅ SDK generated successfully at:', options.output);
-    } catch (error: any) {
-      console.error('❌ Error:', error.message);
-      process.exit(1);
-    }
-  });
-
-program.parse(process.argv);
+main();
