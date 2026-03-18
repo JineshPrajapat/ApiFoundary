@@ -9,7 +9,7 @@ export function createAxiosAdapter(config: AxiosConfig): HttpAdapter {
         url: descriptor.path,
         data: descriptor.body,
         params: descriptor.query,
-        headers: config.headers,
+        ...(config.headers !== undefined ? { headers: config.headers } : {}),
       });
       return res.data;
     },

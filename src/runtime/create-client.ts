@@ -1,59 +1,48 @@
-// import type { ClientConfig } from './client-config.ts';
-// import type { BoundApi } from './bind-api.ts';
-// import type { RequestDescriptor } from './contracts.ts';
-// import { resolveAdapter } from './adapter-resolver.ts';
-// import { bindApi } from './bind-api.ts';
-
-// type EndpointModule = Record<string, (...args: never[]) => RequestDescriptor>;
-
-// /**
-//  * Creates a fully typed, ready-to-use API client.
-//  *
-//  * This function has one job: wire endpoints to an adapter.
-//  * Adapter selection is handled entirely by resolveAdapter().
-//  * HTTP execution is handled entirely by the adapter.
-//  *
-//  * @example — built-in fetch
-//  *   export const api = createClient({ ...users }, { baseUrl: 'https://api.example.com' });
-//  *
-//  * @example — your Axios instance (keeps interceptors, auth, retry logic)
-//  *   export const api = createClient({ ...users }, { axiosInstance });
-//  *
-//  * @example — fully custom adapter
-//  *   export const api = createClient({ ...users }, { adapter: myAdapter });
-//  */
-// export function createClient<T extends EndpointModule>(
-//   endpoints: T,
-//   config: ClientConfig,
-// ): BoundApi<T> {
-//   const adapter = resolveAdapter(config);
-//   return bindApi(endpoints, adapter);
-// }
-
-
 import type { ClientConfig } from './client-config.ts';
-import type { BoundApi } from './bind-api.ts';
-import type { RequestDescriptor } from './contracts.ts';
+import type { EndpointTree } from './contracts.ts';
+import type { BoundTree } from './bind-api.ts';
 import { resolveAdapter } from './adapter-resolver.ts';
 import { bindApi } from './bind-api.ts';
-
-type EndpointModule = Record<string, (...args: never[]) => RequestDescriptor>;
 
 /**
  * Creates a fully typed, ready-to-use API client.
  *
- * @example — built-in fetch
- *   export const api = createClient({ ...users }, { baseUrl: 'https://api.example.com' });
+ * Accepts any EndpointTree — flat or nested — and returns a BoundTree
+ * where every endpoint function is an async function returning the
+ * correct typed Promise.
  *
- * @example — your Axios instance (keeps interceptors, auth, retry logic)
- *   export const api = createClient({ ...users }, { axiosInstance });
+ * @example Flat (single-level tags)
+ *   export const api = createClient(
+ *     { ...accounts, ...cards },
+ *     { baseUrl: 'https://api.example.com' },
+ *   );
+ *   api.Accounts_GetAccounts()  // -> Promise<AccountsResponse>
  *
- * @example — fully custom adapter
- *   export const api = createClient({ ...users }, { adapter: myAdapter });
+ * @example Nested (multi-level tags — generated api.ts format)
+ *   export const api = createClient(
+ *     {
+ *       accounts: { ...accounts },
+ *       cards:    { ...cards },
+ *       manager: {
+ *         ...manager,
+ *         auth: { ...manager_auth },
+ *       },
+ *     },
+ *     { baseUrl: 'https://api.example.com' },
+ *   );
+ *   api.accounts.Accounts_GetAccounts()        // -> Promise<AccountsResponse>
+ *   api.manager.auth.ManagerAuth_Login()       // -> Promise<LoginResponse>
+ *
+ * @example Axios instance
+ *   export const api = createClient({ ...accounts }, { axiosInstance });
+ *
+ * @example Custom adapter
+ *   const adapter: HttpAdapter = { execute: async (d) => { ... } };
+ *   export const api = createClient({ ...accounts }, { adapter });
  */
-export function createClient<T extends EndpointModule>(
+export function createClient<T extends EndpointTree>(
   endpoints: T,
   config: ClientConfig,
-): BoundApi<T> {
+): BoundTree<T> {
   return bindApi(endpoints, resolveAdapter(config));
 }

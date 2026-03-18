@@ -1,73 +1,3 @@
-// /**
-//  * ApiFoundry Runtime Contracts
-//  *
-//  * These are the only interfaces shared between:
-//  *   - Generated code  (depends on RequestDescriptor)
-//  *   - Adapters        (implement HttpAdapter)
-//  *   - createClient()  (depends on both)
-//  *
-//  * No implementations. No classes. Interfaces only.
-//  * Every concrete file depends on this — this depends on nothing.
-//  */
-
-// /** All HTTP methods supported by OpenAPI 3.x */
-// export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-
-// /**
-//  * A plain, serialisable description of a single HTTP call.
-//  *
-//  * Generated endpoint builders return this. They do not execute anything.
-//  * TResponse is a phantom type: erased at runtime, used by TypeScript to
-//  * infer the correct Promise return type through bindApi().
-//  */
-// export interface RequestDescriptor<TResponse = unknown> {
-//   readonly method: HttpMethod;
-//   readonly path: string;
-//   readonly body?: unknown;
-//   readonly query?: Record<string, unknown>;
-//   /** Phantom — never assigned at runtime. Exists only for type inference. */
-//   readonly _response?: TResponse;
-// }
-
-// /** Standardised HTTP response envelope */
-// export interface ApiResponse<T = unknown> {
-//   data: T;
-//   status: number;
-//   headers: Record<string, string>;
-// }
-
-// /**
-//  * The single contract every adapter must implement.
-//  * One method: receive a descriptor, return a typed Promise.
-//  */
-// export interface HttpAdapter {
-//   execute<TResponse>(descriptor: RequestDescriptor<TResponse>): Promise<TResponse>;
-// }
-
-// /**
-//  * Minimal Axios-compatible interface.
-//  * Kept structurally typed (not importing axios) so axios remains optional.
-//  */
-// export interface AxiosLike {
-//   request<T>(config: AxiosRequestConfig): Promise<AxiosResponseLike<T>>;
-// }
-
-// export interface AxiosRequestConfig {
-//   method: string;
-//   url: string;
-//   data?: unknown;
-//   params?: unknown;
-//   headers?: Record<string, string>;
-//   signal?: AbortSignal;
-// }
-
-// export interface AxiosResponseLike<T> {
-//   data: T;
-//   status: number;
-//   headers: Record<string, string>;
-// }
-
-
 /**
  * ApiFoundry Runtime Contracts
  *
@@ -106,6 +36,35 @@ export interface ApiResponse<T = unknown> {
 export interface HttpAdapter {
   execute<TResponse>(descriptor: RequestDescriptor<TResponse>): Promise<TResponse>;
 }
+
+/**
+ * A single endpoint function — takes any arguments, returns a RequestDescriptor.
+ * This is the leaf-node type in an EndpointTree.
+ */
+export type EndpointFn = (...args: never[]) => RequestDescriptor<unknown>;
+
+/**
+ * A recursive tree of endpoint functions and nested namespaces.
+ *
+ * This is what createClient() accepts:
+ *
+ *   // Flat (single-level tags):
+ *   createClient({ ...accounts, ...cards }, config)
+ *
+ *   // Nested (multi-level tags like manager/auth):
+ *   createClient({
+ *     accounts: { ...accounts },
+ *     manager: {
+ *       ...manager,
+ *       auth: { ...manager_auth },
+ *     },
+ *   }, config)
+ *
+ * Both forms satisfy EndpointTree.
+ */
+export type EndpointTree = {
+  [key: string]: EndpointFn | EndpointTree;
+};
 
 /**
  * Minimal structural Axios interface.

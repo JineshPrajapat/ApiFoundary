@@ -16,8 +16,7 @@ export function countEndpoints(endpoints: ParsedEndpoint[]) {
   const byTag: Record<string, number> = {};
 
   for (const ep of endpoints) {
-    if (!byTag[ep.tag]) byTag[ep.tag] = 0;
-    byTag[ep.tag]++;
+    byTag[ep.tag] = (byTag[ep.tag] ?? 0) + 1;
   }
 
   return {

@@ -21,14 +21,17 @@ export interface PipelineResult {
   skipped: string[];
   warnings: string[];
   tags: string[];
+  counts: {
+    total: number;
+    byTag: Record<string, number>;
+  };
 }
 
 /**
  * Executes the full codegen pipeline:
  *   load spec → parse schemas → parse paths → generate code → write files
  *
- * onStep: called before each stage (for progress display in CLI)
- * Returns warnings accumulated during parsing for display after completion.
+ * Set options.verbose = true (via --verbose CLI flag) to print debug info.
  */
 export async function run(
   { input, output, options }: PipelineInput,
@@ -36,6 +39,7 @@ export async function run(
 ): Promise<PipelineResult> {
   const warnings: string[] = [];
   const warn = (msg: string) => warnings.push(msg);
+  const verbose = options.verbose ?? false;
 
   onStep('Loading spec...');
   const spec = await loadSpec(input);
@@ -46,18 +50,23 @@ export async function run(
 
   onStep('Parsing paths...');
   const endpoints = parsePaths(spec, warn);
-  console.log("endpoints", endpoints )
+
+  if (verbose) {
+    console.log('[verbose] Parsed endpoints:', JSON.stringify(endpoints, null, 2));
+  }
 
   onStep('Counting endpoints...');
   const counts = countEndpoints(endpoints);
-  console.log('Endpoints summary:', counts);
+
+  if (verbose) {
+    console.log('[verbose] Endpoint counts:', counts);
+  }
 
   onStep('Generating code...');
   const tags = [...new Set(endpoints.map((e) => e.tag))];
   const typesContent = generateTypes(schemas);
   const endpointsByTag = groupByTag(endpoints, schemaNames, options);
 
-  const { sdkDir } = options;
   const apiFilePath = 'api.ts';
 
   const files: FileMap = {
@@ -68,7 +77,7 @@ export async function run(
   onStep('Writing files...');
   const { written, skipped } = await writeFiles(output, files, [apiFilePath]);
 
-  return { written, skipped, warnings, tags };
+  return { written, skipped, warnings, tags, counts };
 }
 
 function groupByTag(

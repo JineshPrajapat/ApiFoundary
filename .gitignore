@@ -33,4 +33,5 @@ Thumbs.db
 # Coverage directories (from testing)
 /coverage/
 
-/test/
+/test
+/data

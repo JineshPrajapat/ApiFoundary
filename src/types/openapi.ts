@@ -31,4 +31,5 @@ export interface CodegenOptions {
   splitByTag: boolean;
   /** Subdirectory inside output where SDK files land, e.g. 'api' → src/api/ */
   sdkDir: string;
+  verbose?: boolean;
 }

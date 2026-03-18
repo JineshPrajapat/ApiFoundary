@@ -1,15 +1,70 @@
 {
   "name": "apifoundry",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "Generate a typed TypeScript SDK from an OpenAPI 3.x spec",
+  "type": "module",
+
+  "bin": {
+    "apifoundry": "dist/cli.js"
   },
-  "keywords": [],
+
+  "exports": {
+    ".": {
+      "types":   "./dist/runtime/index.d.ts",
+      "import":  "./dist/runtime/index.js",
+      "require": "./dist/runtime/index.cjs"
+    },
+    "./runtime": {
+      "types":   "./dist/runtime/index.d.ts",
+      "import":  "./dist/runtime/index.js",
+      "require": "./dist/runtime/index.cjs"
+      
+    },
+    "./codegen": {
+      "types": "./dist/codegen/pipeline.d.ts",
+      "import":  "./dist/codegen/pipeline.js",
+      "require": "./dist/codegen/pipeline.cjs"
+    }
+  },
+
+  "main":  "dist/runtime/index.cjs",
+  "module": "dist/runtime/index.js",
+  "types": "dist/runtime/index.d.ts",
+
+  "files": [
+    "dist/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+
+  "scripts": {
+    "build": "tsup --no-dts && tsc -p tsconfig.build.json",
+    "build:watch": "tsup --no-dts --watch",
+    "dev": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run typecheck && npm run build",
+    "clean": "rm -rf dist" 
+  },
+
+  "keywords": [
+    "openapi",
+    "codegen",
+    "typescript",
+    "sdk-generator",
+    "type-safe",
+    "react-query",
+    "orval-alternative"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "module",
+
+  "engines": {
+    "node": ">=20.0.0"
+  },
+
   "dependencies": {
     "commander": "^14.0.3",
     "fs-extra": "^11.3.3",
@@ -17,8 +72,14 @@
     "prettier": "^3.8.1"
   },
   "devDependencies": {
-    "@types/node": "^25.3.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/ui": "^2.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
   }
 }
