@@ -1,0 +1,201 @@
+{
+  "openapi": "3.0.4",
+  "info": { "title": "Swagger Petstore", "version": "1.0.27" },
+  "paths": {
+    "/pet": {
+      "post": {
+        "tags": ["pet"],
+        "operationId": "addPet",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+        },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } }
+        }
+      },
+      "put": {
+        "tags": ["pet"],
+        "operationId": "updatePet",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+        },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } }
+        }
+      }
+    },
+    "/pet/findByStatus": {
+      "get": {
+        "tags": ["pet"],
+        "operationId": "findPetsByStatus",
+        "parameters": [
+          { "name": "status", "in": "query", "required": true, "schema": { "type": "string", "enum": ["available", "pending", "sold"] } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Pet" } } } } }
+        }
+      }
+    },
+    "/pet/{petId}": {
+      "get": {
+        "tags": ["pet"],
+        "operationId": "getPetById",
+        "parameters": [
+          { "name": "petId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["pet"],
+        "operationId": "deletePet",
+        "parameters": [
+          { "name": "petId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Pet deleted" } }
+      }
+    },
+    "/store/inventory": {
+      "get": {
+        "tags": ["store"],
+        "operationId": "getInventory",
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "object", "additionalProperties": { "type": "integer" } } } } }
+        }
+      }
+    },
+    "/store/order": {
+      "post": {
+        "tags": ["store"],
+        "operationId": "placeOrder",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } }
+        },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/store/order/{orderId}": {
+      "get": {
+        "tags": ["store"],
+        "operationId": "getOrderById",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/user": {
+      "post": {
+        "tags": ["user"],
+        "operationId": "createUser",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
+        },
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }
+        }
+      }
+    },
+    "/user/login": {
+      "get": {
+        "tags": ["user"],
+        "operationId": "loginUser",
+        "parameters": [
+          { "name": "username", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "password", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "type": "string" } } } }
+        }
+      }
+    },
+    "/user/{username}": {
+      "get": {
+        "tags": ["user"],
+        "operationId": "getUserByName",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["user"],
+        "operationId": "deleteUser",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "User deleted" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id":       { "type": "integer" },
+          "petId":    { "type": "integer" },
+          "quantity": { "type": "integer" },
+          "status":   { "type": "string", "enum": ["placed", "approved", "delivered"] },
+          "complete": { "type": "boolean" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id":   { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer" },
+          "username":   { "type": "string" },
+          "firstName":  { "type": "string" },
+          "lastName":   { "type": "string" },
+          "email":      { "type": "string" },
+          "password":   { "type": "string" },
+          "phone":      { "type": "string" },
+          "userStatus": { "type": "integer" }
+        }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id":   { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "Pet": {
+        "required": ["name", "photoUrls"],
+        "type": "object",
+        "properties": {
+          "id":        { "type": "integer" },
+          "name":      { "type": "string" },
+          "category":  { "$ref": "#/components/schemas/Category" },
+          "photoUrls": { "type": "array", "items": { "type": "string" } },
+          "tags":      { "type": "array", "items": { "$ref": "#/components/schemas/Tag" } },
+          "status":    { "type": "string", "enum": ["available", "pending", "sold"] }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code":    { "type": "integer" },
+          "type":    { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

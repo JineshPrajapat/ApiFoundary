@@ -1,0 +1,146 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Edge Cases", "version": "1.0.0" },
+  "paths": {
+    "/ping": {
+      "get": {
+        "tags": ["default"],
+        "operationId": "AppController_ping",
+        "responses": { "200": { "description": "pong" } }
+      }
+    },
+    "/ping-server": {
+      "get": {
+        "tags": ["ping-server"],
+        "operationId": "PingController_check",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/admin/fees/getSettings": {
+      "get": {
+        "tags": ["admin/fees"],
+        "operationId": "FeesController_getSettings",
+        "responses": {
+          "200": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeesDto" } } }
+          }
+        }
+      }
+    },
+    "/admin/fees/updateSettings": {
+      "post": {
+        "tags": ["admin/fees"],
+        "operationId": "FeesController_updateSettings",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateFeesDto" } } }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/manager/auth/login": {
+      "post": {
+        "tags": ["manager/auth"],
+        "operationId": "AuthController_login",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginDto" } } }
+        },
+        "responses": {
+          "200": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "AuthController_login",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginDto" } } }
+        },
+        "responses": {
+          "200": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          }
+        }
+      }
+    },
+    "/items/{id}": {
+      "get": {
+        "tags": ["items"],
+        "operationId": "ItemsController_getById",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "include", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ItemDto" } } }
+          }
+        }
+      }
+    },
+    "/dup/resource": {
+      "get": {
+        "tags": ["default"],
+        "operationId": "DupController_getResource",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/dup/other": {
+      "get": {
+        "tags": ["default"],
+        "operationId": "DupController_getResource",
+        "responses": { "200": { "description": "ok" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email":    { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token":     { "type": "string" },
+          "expiresIn": { "type": "number" }
+        }
+      },
+      "FeesDto": {
+        "type": "object",
+        "properties": {
+          "id":   { "type": "number" },
+          "name": { "type": "string" },
+          "rate": { "type": "number" }
+        }
+      },
+      "UpdateFeesDto": {
+        "type": "object",
+        "required": ["rate"],
+        "properties": {
+          "rate": { "type": "number" }
+        }
+      },
+      "ItemDto": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id":   { "type": "string" },
+          "name": { "type": "string" }
+        }
+      },
+      "NullableSchema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string", "nullable": true }
+        }
+      }
+    }
+  }
+}

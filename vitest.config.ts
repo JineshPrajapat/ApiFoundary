@@ -4,12 +4,18 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
-    include: ['test/**/*.test.ts'],
+    include: [
+      'test/unit/**/*.test.ts',
+      'test/integration/**/*.test.ts',
+    ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/cli.ts'],
+      exclude: [
+        'src/cli.ts',
+        'src/**/*.d.ts',
+      ],
       thresholds: {
         statements: 80,
         branches: 80,
